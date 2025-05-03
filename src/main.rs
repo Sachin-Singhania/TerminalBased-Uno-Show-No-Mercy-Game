@@ -5,10 +5,11 @@ use uno::shownomercy::{self, ShowNoMercyTrait};
 fn main() {
     // let vec= vec![String::from("Sachin"),String::from("Taushi")];
     // let mut game= shownomercy::ShowNoMercy::new(vec, vec.len());
-    let players= vec![String::from("Sachin"),String::from("Harsh"),String::from("Dev"),String::from("Arpit")];
+    let players= vec![String::from("Sachin"),String::from("Ai"),String::from("Ai2"),String::from("Ai3"),String::from("Ai4"),String::from("Ai5")];
     let len=players.len();
-    let mut game= shownomercy::ShowNoMercy::new(players.to_owned(),  len as u8);
+    let mut game= shownomercy::ShowNoMercy::new(players.to_owned(),  len as u8).unwrap();
     game.start_play();
+    
 }
 #[cfg(test)]
 mod tests {
@@ -18,13 +19,13 @@ mod tests {
     #[test]
     fn test_unomercy_initialization() {
         let vec= vec![String::from("Hello"),String::from("HI"),String::from("WHATSAP"),String::from("WTF"),String::from("WW")];
-        let mut game= shownomercy::ShowNoMercy::new(vec, 5);
+        let mut game= shownomercy::ShowNoMercy::new(vec, 5).unwrap();
         assert_eq!(game.players_length,5);
     }
 
     #[test]
     fn test_discard_all_chain() {
-        let mut game = ShowNoMercy::new(vec!["Alice".into()], 1);
+        let mut game = ShowNoMercy::new(vec!["Alice".into()], 1).unwrap();
         game.players.push(
             Player{
                 deck_index:String::from("AliceDeck"),

@@ -1,84 +1,59 @@
-🃏 UNO: Show No Mercy – Game Rules
-UNO: Show No Mercy is a custom twist on the classic UNO game with extreme cards and aggressive mechanics. The objective remains the same: Be the first player to get rid of all your cards. Here's how the game works:
+# UNO Show No Mercy Terminal Game 🎮🃏
 
-🎯 Objective
-Be the first to play all your cards.
+A terminal-based multiplayer version of the classic UNO game — **with a twist**!  
+This version, "Show No Mercy", includes special cards and unpredictable gameplay that takes the original UNO to the next level!
 
-The game supports 2–6 players.
+## Features ✨
 
-🛠️ Setup
-Each player is dealt 7 cards.
+- 2 to 6 Players Multiplayer Support 👨‍👩‍👧‍👦
+- Special Action Cards 💥
+- Terminal-based UI for classic retro fun 💻
+- Chain reactions & strategic gameplay ♟️
 
-A card is placed in the center to start the game (the "current card").
+---
 
-Remaining cards form the draw pile; played cards go into the playing stack.
+## How to Play ▶️
 
-The game starts in a clockwise direction.
+### Setup 🧰
 
-🧩 Card Types and Their Effects
-🔢 Number Cards (0–9)
-Must match the color or number of the current card.
+Each player starts with 7 cards.  
+Players take turns to play cards matching either the **color** or the **type** of the top card on the discard pile.
 
-🔁 Reverse
-Reverses play direction (clockwise ↔ counter-clockwise).
+---
 
-⏭️ Skip
-Skips the next player's turn.
+### Card Types & Actions 🃏
 
-⏹️ Skip Everyone
-Skips all other players for one turn — your turn comes again.
+| Card Type             | Effect Description |
+|-----------------------|--------------------|
+| `Number(n)` 🔢        | Normal numbered card. Match by number or color. |
+| `REVERSE` 🔁         | Reverses the turn order. |
+| `SKIP` ⛔            | Skips the next player's turn. |
+| `DRAW2` ✌️           | Next player draws 2 cards. |
+| `DRAW4` ✴️           | Next player draws 4 cards. |
+| `DRAW6` 6️⃣           | Next player draws 6 cards. |
+| `DRAW10` 🔟          | Next player draws 10 cards. Brutal! |
+| `SKIPEVERYONE` 🚫👥   | Skips all players; you play again. |
+| `DISCARDALL` 🗑️       | Discard all cards of the same color. |
+| `ZEROPASS` 0️⃣        | All players pass their deck clockwise. |
+| `SEVENPASS` 7️⃣      | Current player selects someone to swap decks with. |
+| `WILDROULETTE` 🎡     | Keep drawing cards until a declared color is found. |
+| `DRAW4REVERSE` ↩️✴️   | Draw 4 + reverse direction. |
 
-➕ Draw Cards
-Draw2: Next player draws 2 cards and loses a turn.
+---
 
-Draw4: Next player draws 4 cards and loses a turn.
+## Win Condition 🏆
 
-Draw6: Next player draws 6 cards.
+The first player to discard all cards wins the game.  
+**Play smart. Chain better. Show no mercy.**
 
-Draw10: Next player draws 10 cards — a true "No Mercy" moment!
+---
 
-Draw4Reverse: Next player draws 4 cards and play direction is reversed.
+## Run the Game 🚀
 
-🎲 Wild Roulette (Color: BLACK)
-Current player declares a color.
+Make sure you have Rust installed:  
+https://www.rust-lang.org/tools/install
 
-Next player keeps drawing until they get a card of the declared color.
-
-🧨 DiscardAll
-Discard all cards of the same color from your hand.
-
-🚫 ZeroPass
-Play passes to the next player, skipping your turn — strategic for blocking wins.
-
-🔁 SevenPass
-Reverses direction and skips a turn — chaos guaranteed!
-
-🚦 Valid Moves
-You can play a card if:
-
-It matches the color or type of the current card.
-
-It is a wild card (e.g. WildRoulette).
-
-DiscardAll can be played if the color matches.
-
-You cannot play cards with unmatched color/type unless it's a wild.
-
-🧑‍⚖️ Special Rules
-UNO: You do not need to call UNO; the game handles it automatically.
-
-Win Condition: You win immediately when you play your last card.
-
-Deck Recycle: If draw pile is low, 80% of the playing stack is shuffled back.
-
-No Mercy Rule: Some cards can completely change the game in a single move.
-
-Chaining: Some cards like DiscardAll can trigger chains if same color cards remain.
-
-🏁 End of Game
-The game ends when a player runs out of cards.
-
-A leaderboard may track eliminated players.
-left:-
-Refactor error parsing
-
+```bash
+git clone https://github.com/Sachin-Singhania/TerminalBased--Uno-Show-No-Mercy-Game.git
+cd TerminalBased--Uno-Show-No-Mercy-Game
+cargo run

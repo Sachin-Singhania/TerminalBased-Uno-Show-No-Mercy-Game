@@ -1,7 +1,7 @@
 use colored::Colorize;
 use rand::Rng;
 use std::{
-    collections::{HashMap, VecDeque},
+    collections::HashMap,
     io::{self, Write},
 };
 #[derive(Debug, Clone, PartialEq)]
@@ -64,6 +64,7 @@ pub(crate) enum GameError {
     InvalidMove,
     InvalidPlayer,
     YouCannotSelectYourself,
+    NOTMORETHAN6PLAYERS
 }
 pub trait ShowNoMercyTrait {
     fn maybe_refill_deck(&mut self);
@@ -83,15 +84,12 @@ pub trait ShowNoMercyTrait {
     fn get_current_card(&self) -> Card;
     fn skip_card(&mut self);
     fn next_turn(&mut self);
-    fn check_is_move_valid(
-        &mut self,
-        card:&Card,card_index:usize
-    ) -> Result<(), GameError>;
+    fn check_is_move_valid(&mut self,card:&Card,card_index:usize) -> Result<(), GameError>;
     fn get_card_of_current_player(&mut self, player: u8) -> Option<Card> ;
     fn start_play(&mut self);
-    fn print_current_card(&self);
+    fn print_current_card(& mut self);
     fn display_card_of_player(&mut self, player_index: u8);
-    fn new(player_names: Vec<String>, no_of_players: u8) -> Self;
+    fn new(player_names: Vec<String>, no_of_players: u8) -> Result<Self, GameError> where Self: Sized;
     fn initialize_cards(&mut self);
     fn shuffle_cards(&mut self);
     fn give_cards_to_players(&mut self, player_names: Vec<String>, no_of_players: u8);
@@ -99,8 +97,14 @@ pub trait ShowNoMercyTrait {
     fn initialize_black_cards(&mut self, deck: &mut Vec<Card>);
     fn print_deck(&self);
 }
+
+
+
 impl ShowNoMercyTrait for ShowNoMercy {
-    fn new(player_names: Vec<String>, no_of_players: u8) -> Self {
+    fn new(player_names: Vec<String>, no_of_players: u8) -> Result<Self, GameError>{
+        if no_of_players>6 {
+            return Err(GameError::NOTMORETHAN6PLAYERS);
+        }
         let mut game = ShowNoMercy {
             leaderboard:vec![],
             top_players:1,
@@ -120,12 +124,14 @@ impl ShowNoMercyTrait for ShowNoMercy {
         game.shuffle_cards();
         game.shuffle_cards();
         game.shuffle_cards();
+        game.shuffle_cards();
+        game.shuffle_cards();
         game.give_cards_to_players(player_names, no_of_players);
         game.print_deck();
         for _ in 0..5  {
             println!("\n");
         }
-        game
+        Ok(game)
     }
     fn print_deck(&self) {
         for (_, card) in self.deck.iter().enumerate() {
@@ -149,12 +155,17 @@ impl ShowNoMercyTrait for ShowNoMercy {
             };
         }
     }
-    fn print_current_card(&self) {
+    fn print_current_card(&mut self) {
         let current = &self.playing_stack[self.playing_stack.len() - 1];
         let fstr = format!(
             "CURRENT CARD PLAYED {:?} of {:?}",
             current.card_type, current.color
         );
+        if let Some(color) =self.card_to_select  {
+            if current.color!=Color::BLACK && color!=current.color {
+                self.card_to_select=Some(current.color);
+            }
+        }
         let color=self.card_to_select;
        
         match current.color {
@@ -404,40 +415,82 @@ impl ShowNoMercyTrait for ShowNoMercy {
             }
         }
         loop {
-            self.print_current_card();
-            // if self.deck len is (?) collect 80% of card from self.playing_stack shuffle it and push it to self.deck
-            self.maybe_refill_deck();
+            if self.players.is_empty() {
+                break;
+            }
             let player_index = self.current_player;
-            let card = self.get_card_of_current_player(player_index);
-            let player = &self.players[player_index as usize];
-            let card_index=player.deck_index.clone();
-            let cards = self.player_deck.get(&card_index).unwrap();
-            match card {
-                Some(c)=>{
-                    if c.card_type==CardType::SKIPEVERYONE {
-                        for _ in 0..5  {
-                            println!("\n");
+            if player_index  >= self.players.len() as u8 {
+                self.current_player = 0;
+            }
+            self.print_current_card();
+            self.maybe_refill_deck();
+            let deck_index;
+            let player_name;
+             {
+                 let player = &self.players[player_index as usize];
+                 deck_index = player.deck_index.clone(); 
+                 player_name=player.name.clone();
+             }
+            
+                let card = self.get_card_of_current_player(player_index);
+                match card {
+                    Some(c)=>{
+                        if c.card_type==CardType::SKIPEVERYONE {
+                            self.playing_stack.push(c);
+                            for _ in 0..5  {
+                                println!("\n");
+                            }
+                            continue;
                         }
-                        continue;
-                    }
-                    if c.card_type==CardType::SKIP{
-                        for _ in 0..5  {
-                            println!("\n");
+                        if c.card_type==CardType::SKIP{
+                            self.playing_stack.push(c);
+                            for _ in 0..5  {
+                                println!("\n");
+                            }
+                            continue;
                         }
-                        continue;
+                        self.playing_stack.push(c);
+                    }None=>{}
+                };
+                if let Some(cards) = self.player_deck.get(&deck_index) {
+                    if cards.is_empty(){
+                        self.player_won(player_index as usize, &deck_index);
+                        if self.players_length <= 0 {
+                            break;
+                        }
+                        if self.current_player >= self.players.len() as u8 {
+                            self.current_player = 0;
+                        }
+                        if self.players_length==1 {
+                            let remove=self.players.remove(0);
+                            self.leaderboard.push(PlayerRank { name: remove.name, rank: self.bottom_players });
+                            break;
+                        }
+                        continue; 
                     }
-                    self.playing_stack.push(c);
-                }None=>{
                     if cards.len() >= 25 {
-                        println!("PLAYER : {} ELEMINATED",player.name);
+                        println!("PLAYER : {} ELEMINATED",player_name);
                         let remove=self.players.remove(player_index as usize);
-                        self.leaderboard.push(PlayerRank { name: remove.name, rank:self.players_length as usize-self.bottom_players  });
-                        self.players_length =self.players_length- 1;
-                        self.bottom_players+=1;
-                        self.player_deck.remove(&card_index);
+                        self.leaderboard.push(PlayerRank { name: remove.name, rank: self.bottom_players });
+                        self.bottom_players-=1;
+                        self.players_length-=1;
+                        self.player_deck.remove(&deck_index);
+                        if self.players_length == 1 {
+                            println!("REACHED HERE");
+                            let winner = &self.players[0].deck_index.clone();
+                            self.player_won(0, winner);
+                            break;
+                        }
+                        if self.current_player >= self.players.len() as u8 {
+                            self.current_player = 0;
+                        }
                     }
+                    
+                } else {
+                    continue;
                 }
-            };
+            
+           
             for _ in 0..5  {
                 println!("\n");
             }
@@ -446,15 +499,15 @@ impl ShowNoMercyTrait for ShowNoMercy {
             }
             self.next_turn();
         }
-        for (i,p) in   self.leaderboard.iter().enumerate(){
-            println!("{} | {}",i+1,p.name);
+        self.leaderboard.sort_by(|x,y| x.rank.cmp(&y.rank));
+        for (_,p) in   self.leaderboard.iter().enumerate(){
+            println!("{} | {}",p.rank,p.name);
         }
     }
     fn get_card_of_current_player(&mut self, player: u8) -> Option<Card> {
         self.display_card_of_player(player);
         let (card,index)= self.get_card(player);
         let player_curr = &self.players[player as usize];
-        let player_index=player_curr.deck_index.clone();
         let cards= self.player_deck.get_mut(&player_curr.deck_index);
         match card {
             Some(c)=>{
@@ -466,9 +519,6 @@ impl ShowNoMercyTrait for ShowNoMercy {
                         println!("{} played {:?}",player_curr.name,c);
                         let index=index.unwrap();
                         deck.remove(index);
-                        if deck.is_empty() {
-                            self.player_won(player as usize, &player_index);
-                        }
                         return Some(c);
                     }None=>{
                         return None;
@@ -584,6 +634,7 @@ impl ShowNoMercyTrait for ShowNoMercy {
     }
     fn check_is_move_valid(&mut self,card:&Card,card_index:usize) -> Result<(), GameError> {
                 let current_card = self.get_current_card();
+              
                 if current_card.card_type == card.card_type
                     || current_card.color == card.color
                     || current_card.color == Color::BLACK
@@ -1033,6 +1084,9 @@ impl ShowNoMercyTrait for ShowNoMercy {
                 return Ok(());
     }
     fn skip_card(&mut self) {
+        if self.players_length==1 {
+            self.current_player=0;
+        }
         if self.direction_reverse {
             self.current_player =(self.current_player + self.players_length - 2) % self.players_length;
         } else {
@@ -1117,7 +1171,7 @@ impl ShowNoMercyTrait for ShowNoMercy {
     self.player_deck.remove(deck_index);
     self.leaderboard.push(PlayerRank { name: player.name, rank: self.top_players });
     self.top_players+=1;
-    self.current_player+=1;
+    self.players_length-=1;
    }
     fn zeropass(&mut self,card_index:usize) {
         let player = self.current_player as usize;
