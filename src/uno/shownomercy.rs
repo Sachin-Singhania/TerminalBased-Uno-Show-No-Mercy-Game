@@ -430,10 +430,10 @@ impl ShowNoMercyTrait for ShowNoMercy {
                 }None=>{
                     if cards.len() >= 25 {
                         println!("PLAYER : {} ELEMINATED",player.name);
-                        self.players_length =self.players_length- 1;
                         let remove=self.players.remove(player_index as usize);
-                        self.leaderboard.push(PlayerRank { name: remove.name, rank:self.bottom_players  });
-                        self.bottom_players-=1;
+                        self.leaderboard.push(PlayerRank { name: remove.name, rank:self.players_length as usize-self.bottom_players  });
+                        self.players_length =self.players_length- 1;
+                        self.bottom_players+=1;
                         self.player_deck.remove(&card_index);
                     }
                 }
